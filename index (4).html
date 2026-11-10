@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1b777e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='8' fill='%23f7f1e4'/%3E%3Cpath d='M6 18q5-6 10 0t10 0t8 0M6 25q5-6 10 0t10 0t8 0' fill='none' stroke='%231b777e' stroke-width='2'/%3E%3C/svg%3E">
+  <title>Una carta para Cam</title>
+  <meta name="description" content="Una carta junto al mar">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="Una carta para Cam">
+  <meta property="og:description" content="Una carta junto al mar">
+  <meta property="og:type" content="website">
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f7f1e4;
+      --ink: #283e40;
+      --muted: #637a77;
+      --sea-depth: 0;
+      --surface-opacity: 1;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background: #176a76;
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; min-width: 280px; touch-action: manipulation; }
+    button { font: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, #reading:focus-visible {
+      outline: 3px solid #b37539;
+      outline-offset: 7px;
+    }
+    button { cursor: pointer; }
+    svg { display: block; }
+    .scenery, .scenery * { pointer-events: none; user-select: none; }
+    .scenery { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+    .sea {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, #c5ded6 0%, #d6e4d6 42%, #91c4bb 42.2%, #4b9e9e 61%, #166e7b 100%);
+    }
+    .depth {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, #174f64, #0b354d 58%, #071d32);
+      opacity: var(--sea-depth);
+      transition: opacity 1200ms ease;
+    }
+    .horizon {
+      position: absolute;
+      top: 42%;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: #f6f1d2;
+      box-shadow: 0 0 34px 8px #f3efcd44;
+      opacity: var(--surface-opacity);
+      transition: opacity 1200ms ease;
+    }
+    .sun-glow {
+      position: absolute;
+      width: 65vw;
+      height: 60vh;
+      top: 10%;
+      left: 17.5%;
+      background: radial-gradient(ellipse, #fff8dc50, transparent 65%);
+      opacity: var(--surface-opacity);
+      transition: opacity 1200ms ease;
+    }
+    .waves { position: absolute; inset: 42% -6% 0; width: 112%; height: 58%; }
+    .wave-far { animation: drift 18s ease-in-out infinite alternate; }
+    .wave-near { animation: drift 13s ease-in-out infinite alternate-reverse; }
+    .grain {
+      position: absolute;
+      inset: 0;
+      opacity: .11;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.76' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23ffffff' filter='url(%23n)' opacity='.5' d='M0 0h180v180H0z'/%3E%3C/svg%3E");
+    }
+    .light-paths {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 1000ms ease;
+    }
+    body[data-stanza="7"] .light-paths { opacity: .34; }
+    .halo {
+      position: absolute;
+      inset: 10%;
+      background: radial-gradient(ellipse, #9ac5bd55, transparent 62%);
+      opacity: 0;
+      transition: opacity 1s;
+    }
+    body[data-stage="closing"] .halo { opacity: 1; }
+    .masthead {
+      position: absolute;
+      top: max(30px, env(safe-area-inset-top));
+      left: 20px;
+      right: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 14px;
+      font: 10px/1.5 system-ui, sans-serif;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      color: #345d5d;
+      text-align: center;
+    }
+    .masthead::before, .masthead::after { content: ""; width: 27px; height: 1px; background: currentColor; opacity: .5; }
+    body[data-stage="reading"] .masthead { visibility: hidden; }
+    main {
+      min-height: 100vh;
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      padding: max(92px, calc(env(safe-area-inset-top) + 68px)) max(20px, env(safe-area-inset-right)) max(72px, calc(env(safe-area-inset-bottom) + 42px)) max(20px, env(safe-area-inset-left));
+    }
+    .cover { width: 100%; text-align: center; padding-top: 6px; }
+    .eyebrow { margin: 0 0 15px; font: 10px/1.6 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .3em; color: #456b66; }
+    h1 { margin: 0 0 44px; font-size: clamp(32px, 6vw, 48px); line-height: 1.18; font-weight: 400; letter-spacing: -.04em; }
+    h1 em { font-weight: 400; }
+    .envelope {
+      position: relative;
+      width: min(300px, 88%);
+      height: 192px;
+      margin: 0 auto 42px;
+      perspective: 1000px;
+      filter: drop-shadow(0 20px 20px #0c4e5e30);
+    }
+    .envelope-back { position: absolute; inset: 0; background: #dcd2ba; border-radius: 3px; }
+    .envelope-letter { position: absolute; inset: 12px 14px 8px; background: #faf6ec; transition: transform 650ms ease; border-radius: 2px; }
+    .envelope-letter::before, .envelope-letter::after { content: ""; position: absolute; left: 28%; right: 28%; height: 1px; background: #8b9d8c55; }
+    .envelope-letter::before { top: 25px; }
+    .envelope-letter::after { top: 32px; left: 38%; right: 38%; }
+    .envelope-front { position: absolute; inset: 0; background: linear-gradient(145deg, #efe6d4, #f6eddb); clip-path: polygon(0 0, 50% 51%, 100% 0, 100% 100%, 0 100%); border-radius: 3px; }
+    .envelope-fold { position: absolute; inset: 0; background: #f6eddc; clip-path: polygon(0 100%, 50% 45%, 100% 100%); border-radius: 3px; }
+    .flap { position: absolute; inset: 0; transform-origin: top; transition: transform 550ms ease, z-index 0s 250ms; z-index: 2; background: linear-gradient(175deg, #fff8e9, #e9dec5); clip-path: polygon(0 0, 100% 0, 50% 53%); backface-visibility: hidden; }
+    .recipient { position: absolute; left: 0; right: 0; bottom: 25px; font-size: 34px; font-style: italic; color: #59716a; letter-spacing: -.06em; }
+    .seal { position: absolute; width: 25px; height: 25px; top: 89px; left: calc(50% - 12.5px); background: #9a6b49; border-radius: 50%; z-index: 3; box-shadow: inset 0 0 0 3px #ac805b; transition: opacity 200ms; }
+    .seal svg { width: 11px; margin: 7px auto; color: #f3dfc0; }
+    .is-opening .flap { transform: rotateX(180deg); z-index: 0; }
+    .is-opening .envelope-letter { transform: translateY(-52px); transition-delay: 180ms; }
+    .is-opening .seal { opacity: 0; }
+    .open-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      min-height: 50px;
+      padding: 14px 26px;
+      border: 1px solid #f7f1e470;
+      border-radius: 3px;
+      background: var(--paper);
+      color: #304b49;
+      box-shadow: 0 5px 18px #0b455519;
+      font: 12px/1.5 system-ui, sans-serif;
+      letter-spacing: .06em;
+      transition: background 200ms, transform 200ms;
+    }
+    .open-button:hover { background: #fffbf1; transform: translateY(-2px); }
+    .open-button svg { width: 18px; height: 18px; }
+    .cover-note { margin: 20px 0 0; font-size: 13px; font-style: italic; color: #e4efdf; letter-spacing: .025em; }
+    #reading { width: min(100%, 620px); border-radius: 3px; }
+    .paper {
+      position: relative;
+      padding: 39px clamp(26px, 6vw, 62px) 43px;
+      background: var(--paper);
+      border: 1px solid #fff9ef90;
+      border-radius: 3px;
+      box-shadow: 0 26px 70px #031b3140, 0 3px 6px #041d3610;
+    }
+    .paper::after { content: ""; position: absolute; inset: 7px; border: 1px solid #8293861c; border-radius: 1px; pointer-events: none; }
+    .paper-mark { width: 36px; height: 25px; margin: 0 auto 28px; color: #69857e; pointer-events: none; }
+    .anchor { display: none; }
+    body[data-stanza="5"] .wave-mark { display: none; }
+    body[data-stanza="5"] .anchor { display: block; }
+    #poem { margin: 0; white-space: pre-wrap; overflow-wrap: break-word; font-size: clamp(18px, 2.5vw, 22px); line-height: 1.7; font-weight: 400; }
+    .reading-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 22px; color: #d2e3dc; }
+    .progress { font: 10px/1.5 system-ui, sans-serif; letter-spacing: .16em; font-variant-numeric: tabular-nums; padding-left: 4px; }
+    .next-button { border: 1px solid #e4efdf38; border-radius: 3px; background: #0c3546c9; color: #f7f1e4; min-height: 44px; padding: 10px 13px; display: flex; align-items: center; gap: 13px; font: 11px/1.5 system-ui, sans-serif; letter-spacing: .06em; }
+    .next-button svg { width: 18px; height: 18px; transition: transform 200ms; }
+    .next-button:hover svg { transform: translateX(3px); }
+    .reveal { animation: reveal 450ms ease both; }
+    .closing { width: min(100%, 470px); }
+    .closing-card {
+      width: 100%;
+      min-height: 290px;
+      padding: 64px 25px;
+      border: 1px solid #fff9ef90;
+      border-radius: 3px;
+      background: var(--paper);
+      box-shadow: 0 26px 70px #031b3140;
+      font-size: clamp(42px, 8vw, 64px);
+      font-weight: 400;
+      font-style: italic;
+      letter-spacing: -.04em;
+    }
+    .music-button { position: fixed; right: max(20px, env(safe-area-inset-right)); bottom: max(15px, env(safe-area-inset-bottom)); min-height: 44px; padding: 8px 13px; border: 1px solid #f7f1e45c; border-radius: 30px; background: #123a49e8; color: #f7f1e4; display: flex; align-items: center; gap: 8px; font: 11px/1.5 system-ui, sans-serif; }
+    .music-button svg { width: 16px; height: 16px; }
+    body[data-stage="closing"] .masthead, body[data-stage="closing"] .music-button { display: none; }
+    .no-script { background: var(--paper); padding: 24px; margin: 20px; text-align: center; }
+    @keyframes drift { from { transform: translateX(-1.5%); } to { transform: translateX(1.5%); } }
+    @keyframes reveal { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 360px) {
+      main { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+      .paper { padding: 30px 25px 34px; }
+      .paper-mark { margin-bottom: 22px; }
+      h1 { margin-bottom: 35px; }
+      .envelope { height: 176px; }
+      .seal { top: 80px; }
+      .recipient { bottom: 20px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body data-stage="cover">
+  <div class="scenery" aria-hidden="true">
+    <div class="sea"></div>
+    <div class="depth"></div>
+    <div class="sun-glow"></div>
+    <div class="horizon"></div>
+    <svg class="waves" viewBox="0 0 1440 640" preserveAspectRatio="none" fill="none">
+      <g class="wave-far" stroke="#e3efdb" stroke-width="1" opacity=".32">
+        <path d="M-80 39Q100 22 270 42T640 40T1020 34T1520 38"/>
+        <path d="M-80 63Q130 38 350 66T800 66T1200 60T1520 64"/>
+        <path d="M-80 109Q120 81 330 110T760 106T1180 106T1520 105"/>
+        <path d="M-80 142Q170 113 430 146T940 145T1520 142"/>
+        <path d="M-80 191Q130 158 420 189T960 188T1520 183"/>
+      </g>
+      <g class="wave-near" stroke="#def0df" stroke-width="1.2" opacity=".23">
+        <path d="M-80 267Q160 209 420 265T970 266T1520 256"/>
+        <path d="M-80 320Q200 271 490 322T1050 314T1520 320"/>
+        <path d="M-80 408Q180 348 480 410T1030 409T1520 398"/>
+        <path d="M-80 521Q190 450 520 520T1120 514T1520 523"/>
+        <path d="M-80 610Q120 549 450 615T1020 611T1520 607"/>
+      </g>
+    </svg>
+    <svg class="light-paths" viewBox="0 0 1000 1000" preserveAspectRatio="none" fill="none" stroke="#b3d5c0" stroke-width="1.5">
+      <path d="M-30 210H170V340H70V560H225V720H100V1040M1030 100H820V250H940V460H780V630H915V810H720V1040"/>
+      <path d="M-30 260H120V390H20M1030 310H875V410H1000M-30 820H175V945H300M1030 870H860V1000" opacity=".45"/>
+    </svg>
+    <div class="halo"></div>
+    <div class="grain"></div>
+  </div>
+
+  <header class="masthead">Una carta para Cam</header>
+  <main>
+    <section class="cover" id="cover" aria-labelledby="cover-title">
+      <p class="eyebrow">Un pedacito de mí</p>
+      <h1 id="cover-title">Para ti,<br><em>con todo mi mar.</em></h1>
+      <div class="envelope" aria-hidden="true">
+        <div class="envelope-back"></div>
+        <div class="envelope-letter"></div>
+        <div class="envelope-front"></div>
+        <div class="envelope-fold"></div>
+        <div class="flap"></div>
+        <div class="seal"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 14S1 9.4 1 5.4C1 1.8 5.4.8 8 4c2.6-3.2 7-2.2 7 1.4C15 9.4 8 14 8 14Z"/></svg></div>
+        <span class="recipient">Cam</span>
+      </div>
+      <button class="open-button" id="open" type="button">Abrir mi carta <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M4 12h15m-5-5 5 5-5 5"/></svg></button>
+      <p class="cover-note">Léela despacio. El mar puede esperar.</p>
+    </section>
+
+    <section id="reading" tabindex="-1" role="region" aria-label="Carta para Cam" aria-describedby="poem" hidden>
+      <article class="paper">
+        <svg class="paper-mark wave-mark" viewBox="0 0 36 25" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M1 11q4-5 8 0t9 0t9 0t8 0M1 17q4-5 8 0t9 0t9 0t8 0"/></svg>
+        <svg class="paper-mark anchor" viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="6" r="3"/><path d="M18 9v23M11 14h14M5 22c0 8 9 7 13 11 4-4 13-3 13-11M3 25l2-4 4 3m18 0 4-3 2 4"/></svg>
+        <p id="poem" aria-live="polite" aria-atomic="true"></p>
+      </article>
+      <div class="reading-footer">
+        <span class="progress" id="progress" aria-hidden="true"></span>
+        <button class="next-button" id="next" type="button">Toca para seguir <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M4 12h15m-5-5 5 5-5 5"/></svg></button>
+      </div>
+    </section>
+
+    <section class="closing" id="closing" hidden>
+      <button class="closing-card" id="restart" type="button" aria-label="Volver al inicio">Te amo</button>
+    </section>
+  </main>
+  <button class="music-button" id="music" type="button" aria-label="Reproducir música" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M9 18V5l11-2v13M9 8l11-2"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/></svg>
+    <span id="music-label">Reproducir música</span>
+  </button>
+  <noscript><p class="no-script">Activa JavaScript para abrir tu carta y leerla junto al mar.</p></noscript>
+  <script>
+    // Único ajuste para la canción. Vacío: sin audio, controles ni solicitudes.
+    const AUDIO_SRC = "";
+
+    const stanzas = [
+      `¿Cómo puede alguien vivir en el mar sin ahogarse?
+Los peces tienen branquias.
+Pero ¿y tú? Tú no naciste en el mar y le tienes miedo.`,
+      `Yo tampoco nací ahí.
+Pero cuando estamos juntos, siento que puedo respirar
+dentro de este mar inmenso que nos rodea
+y que persigue el horizonte sin alcanzarlo.`,
+      `Tal vez la respuesta a ese miedo de perderse en el mar
+tenga que ver con quién está a tu lado cuando te pierdes.
+Y cuando yo me pierdo, quiero que seas tú.`,
+      `Contigo siento que vuelvo a respirar
+como cuando lloré por primera vez.
+Contigo siento que vuelvo a sentirme special,
+como cuando mi primer cumpleaños.`,
+      `Y me hundo contigo en lo más profundo del mar
+como un ancla y la confianza en que no me va a dejar
+
+porque sé que puedo respirar a tu lado
+
+aún cuando el ancla en lo profundo y oscuro del mar está perdida.`,
+      `Ahora, cuando me pierdo en mis pensamientos
+y no encuentro el camino, pienso en ti.
+Pienso en ti desde antes de hablarte,
+cuando todavía me parecía imposible que llegáramos a querernos así.`,
+      `No tenía idea de que ya estaba en un laberinto
+donde todos los caminos llevaban a ti
+
+y del que parece no haber salida
+
+pero quién quisiera salir del paraíso.`,
+      `Al final, la vida es así.
+Todos necesitamos algo que nos permita respirar,
+y mis branquias se llaman Camila.
+
+Y yo quiero ser las tuyas.`,
+      `Quiero que, cuando te asuste la profundidad de este mar,
+me busques con la mano y me encuentres a tu lado.
+Que podamos seguir bajando, despacio,
+hasta que un día te sorprendas respirando tranquila
+en ese lugar al que tanto le temías.`
+    ];
+
+    const cover = document.querySelector('#cover');
+    const reading = document.querySelector('#reading');
+    const closing = document.querySelector('#closing');
+    const poem = document.querySelector('#poem');
+    const progress = document.querySelector('#progress');
+    const openButton = document.querySelector('#open');
+    const nextButton = document.querySelector('#next');
+    const restartButton = document.querySelector('#restart');
+    const musicButton = document.querySelector('#music');
+    const musicLabel = document.querySelector('#music-label');
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let stage = 'cover';
+    let stanzaIndex = 0;
+    let audio = null;
+    let gesture = null;
+
+    function updateMusicControl() {
+      if (audio?.error) {
+        musicLabel.textContent = 'Música no disponible';
+        musicButton.setAttribute('aria-label', 'Música no disponible');
+        musicButton.disabled = true;
+        return;
+      }
+      const playing = audio && !audio.paused;
+      const label = playing ? 'Pausar música' : 'Reproducir música';
+      musicLabel.textContent = label;
+      musicButton.setAttribute('aria-label', label);
+    }
+
+    if (AUDIO_SRC.trim()) {
+      audio = new Audio();
+      audio.preload = 'none';
+      audio.loop = true;
+      audio.src = AUDIO_SRC;
+      audio.addEventListener('play', updateMusicControl);
+      audio.addEventListener('pause', updateMusicControl);
+      audio.addEventListener('error', () => {
+        audio.pause();
+        updateMusicControl();
+      });
+    }
+
+    function playMusic() {
+      // Se invoca directamente en el gesto del botón, antes de la animación.
+      if (!audio) return;
+      try {
+        const attempt = audio.play();
+        if (attempt) attempt.catch(updateMusicControl);
+      } catch {
+        updateMusicControl();
+      }
+    }
+
+    musicButton.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (audio.paused) playMusic();
+      else audio.pause();
+    });
+
+    function showStanza() {
+      document.body.dataset.stanza = String(stanzaIndex + 1);
+      document.documentElement.style.setProperty('--sea-depth', String(.22 + stanzaIndex * .088));
+      document.documentElement.style.setProperty('--surface-opacity', String(.48 - stanzaIndex * .06));
+      poem.textContent = stanzas[stanzaIndex];
+      progress.textContent = `${String(stanzaIndex + 1).padStart(2, '0')} / 09`;
+      poem.classList.remove('reveal');
+      void poem.offsetWidth;
+      poem.classList.add('reveal');
+      window.scrollTo(0, 0);
+    }
+
+    openButton.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (stage !== 'cover') return;
+      stage = 'opening';
+      openButton.disabled = true;
+      if (audio) {
+        musicButton.hidden = false;
+        playMusic();
+      }
+      cover.classList.add('is-opening');
+      const revealLetter = () => {
+        stage = 'reading';
+        document.body.dataset.stage = stage;
+        cover.hidden = true;
+        reading.hidden = false;
+        showStanza();
+        reading.focus({ preventScroll: true });
+      };
+      if (reducedMotion.matches) revealLetter();
+      else window.setTimeout(revealLetter, 750);
+    });
+
+    function advance() {
+      if (stage !== 'reading') return;
+      if (stanzaIndex < stanzas.length - 1) {
+        stanzaIndex += 1;
+        showStanza();
+      } else {
+        stage = 'closing';
+        document.body.dataset.stage = stage;
+        reading.hidden = true;
+        closing.hidden = false;
+        closing.classList.add('reveal');
+        restartButton.focus({ preventScroll: true });
+        window.scrollTo(0, 0);
+      }
+    }
+
+    function hasSelection() {
+      return Boolean(window.getSelection()?.toString().trim());
+    }
+
+    // Solo escuchamos click para avanzar: pointerup + click duplicaría un toque.
+    // Medimos el gesto sin impedir el desplazamiento o la selección nativos.
+    document.addEventListener('pointerdown', (event) => {
+      gesture = { id: event.pointerId, x: event.clientX, y: event.clientY,
+        scrollY: window.scrollY, moved: !event.isPrimary, selected: hasSelection() };
+    }, { passive: true });
+    document.addEventListener('pointermove', (event) => {
+      if (!gesture || gesture.id !== event.pointerId) return;
+      if (Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) > 10) gesture.moved = true;
+    }, { passive: true });
+    document.addEventListener('pointercancel', () => {
+      if (gesture) gesture.moved = true;
+    }, { passive: true });
+
+    function isReadingTap(event) {
+      if (event.detail === 0) return true; // Activación de teclado o tecnología asistiva.
+      if (hasSelection()) return false;
+      return !gesture || (!gesture.moved && !gesture.selected && Math.abs(window.scrollY - gesture.scrollY) < 3);
+    }
+
+    nextButton.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (isReadingTap(event)) advance();
+    });
+
+    restartButton.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (isReadingTap(event)) window.location.reload();
+    });
+
+    document.addEventListener('click', (event) => {
+      if (event.target.closest('button, a, input, textarea, select') || !isReadingTap(event)) return;
+      if (stage === 'reading') advance();
+      else if (stage === 'closing') window.location.reload();
+    });
+  </script>
+</body>
+</html>
